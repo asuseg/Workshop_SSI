@@ -1,5 +1,25 @@
 import pandas as pd
 import matplotlib.pyplot as plt
+import sys
+
+def main(input_file, output_file, graph_file):
+    print("--START--")
+
+    # Read the data from JSON file into a pandas dataFrame
+    # eva stands for extra vehicular activity
+    eva_data = read_json_to_dataframe(input_file)
+
+    # Convert and export data to CSV file for later analysis
+    write_dataframe_to_csv(eva_data, output_file)
+
+    # Sort the dataFrame, ready to be plotted with data on x-axis
+    eva_data.sort_values('date', inplace=True)
+
+    # Plot cumulative time spent in space over years
+    plot_cumulative_time_in_space(eva_data, graph_file)
+
+    print("--END--")
+
 
 def read_json_to_dataframe(input_file):
     """
@@ -12,7 +32,7 @@ def read_json_to_dataframe(input_file):
     Returns:
         eva_df (pd.DataFrame): The clean data as a datFrame structure
     """
-    print(f'Reading JSON file {input_file.name}')
+    print(f'Reading JSON file {input_file}')
     eva_df = pd.read_json(input_file, convert_dates=['date'], encoding='ascii')
     eva_df['eva'] = eva_df['eva'].astype(float)
     eva_df.dropna(axis=0, subset=['duration', 'date'], inplace=True)
@@ -26,7 +46,7 @@ def write_dataframe_to_csv (df, output_file):
         df (pd.DataFrame): Input dataframe.
         output_file (file or str): The file object or the path to a CSV file.
     """
-    print(f'Saving to CSV file {output_file.name}')
+    print(f'Saving to CSV file {output_file}')
     df.to_csv(output_file, index=False, encoding='utf-8')
 
 def plot_cumulative_time_in_space (df, output_graph_file):
@@ -40,8 +60,8 @@ def plot_cumulative_time_in_space (df, output_graph_file):
         df (pd.DataFrame): Data containting a "data" conlumn and a "cumulative_time" column
         output_graph_file (file or str): The file object or the path to a figure file (.png)
     """
-    df['duration_hours'] = eva_data['duration'].str.split(":").apply(lambda x: int(x[0]) + int(x[1])/60)
-    df['cumulative_time'] = eva_data['duration_hours'].cumsum()  
+    df = add_duration_hours(df)
+    df['cumulative_time'] = df['duration_hours'].cumsum()  
     print(f'Plotting cumulative spacewalk duration and saving to {graph_file}')
     plt.plot(df['date'], df['cumulative_time'], 'ko-')
     plt.xlabel('Year')
@@ -50,24 +70,48 @@ def plot_cumulative_time_in_space (df, output_graph_file):
     plt.savefig(output_graph_file)
     plt.show()
 
-# Data source: https://data.nasa.gov/resource/eva.json (with modifications)
-input_file = open('./eva-data.json', 'r', encoding='ascii')
-output_file = open('./eva-data.csv', 'w', encoding='utf-8')
-graph_file = './cumulative_eva_graph.png'
+def text_to_duration(duration):
+    """
+    Convert a text format duration "HH:MM" to duration in hours
 
-print("--START--")
+    Args:
+        duration (str): The text format duration
 
-# Read the data from JSON file into a pandas dataFrame
-# eva stands for extra vehicular activity
-eva_data = read_json_to_dataframe(input_file)
+    Returns:
+        duration_hours (float): The duration in hours
+    """
+    hours, minutes = duration.split(":")
+    duration_hours = int(hours) + int(minutes)/6  # there is an intentional bug on this line (should divide by 60 not 6)
+    return duration_hours
 
-# Convert and export data to CSV file for later analysis
-write_dataframe_to_csv(eva_data, output_file)
 
-# Sort the dataFrame, ready to be plotted with data on x-axis
-eva_data.sort_values('date', inplace=True)
+def add_duration_hours(df):
+    """
+    Add duration in hours (duration_hours) variable to the dataset
 
-# Plot cumulative time spent in space over years
-plot_cumulative_time_in_space(eva_data, graph_file)
+    Args:
+        df (pd.DataFrame): The input dataframe.
 
-print("--END--")
+    Returns:
+        df_copy (pd.DataFrame): A copy of df with the new duration_hours variable added
+    """
+    df_copy = df.copy()
+    df_copy["duration_hours"] = df_copy["duration"].apply(
+        text_to_duration
+    )
+    return df_copy
+
+
+if __name__ == "__main__":
+    
+    if len(sys.argv) < 3:
+         # Data source: https://data.nasa.gov/resource/eva.json (with modifications)
+        input_file = open('./data/eva-data.json', 'r', encoding='ascii')
+        output_file = open('./results/eva-data.csv', 'w', encoding='utf-8')
+    else:
+        input_file = sys.argv[1]
+        output_file = sys.argv[2]
+        print('Using custom input and output filenames')
+    
+    graph_file = './results/cumulative_eva_graph.png'   
+    main(input_file, output_file, graph_file)
