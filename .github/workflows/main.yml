@@ -1,0 +1,27 @@
+name: CI
+
+on: push
+
+jobs:
+
+  build-and-test:
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Setup python
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.12"
+    
+    - name: Install Python dependencies
+      run: |
+        python3 -m pip install -r spacewalks/spacewalks/requirements.txt
+    
+    - name: Test with Pytest
+      run: |
+        python3 -m pytest --cov spacewalks/spacewalks/tests
