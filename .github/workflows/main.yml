@@ -24,4 +24,5 @@ jobs:
     
     - name: Test with Pytest
       run: |
-        python3 -m pytest --cov spacewalks/spacewalks/tests
+        cd spacewalks/spacewalks
+        python3 -m pytest --cov
