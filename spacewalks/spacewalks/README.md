@@ -2,9 +2,7 @@
 
 ## Overview
 
-Spacewalks is
-
-a Python analysis tool for researchers to generate visualisations
+Spacewalks is a Python analysis tool for researchers to generate visualisations
 and statistical summaries of NASA's extravehicular activity datasets.
 
 ## Features
@@ -24,3 +22,9 @@ installed. You will also need the following libraries (minimum versions in brack
 - [Matplotlib](https://matplotlib.org/stable/index.html) >=3.0.0  - Spacewalks uses Matplotlib to make plots
 - [pytest](https://docs.pytest.org/en/8.2.x/#) >=8.2.0  - Spacewalks uses pytest for testing
 - [pandas](https://pandas.pydata.org/) >= 2.2.0 - Spacewalks uses pandas for data frame manipulation
+
+
+# Usage instructions
+
+The code can be run from a python terminal with command eva_data_analysis.py
+Use pytest to run all unit tests coded with python.exe -m pytest
